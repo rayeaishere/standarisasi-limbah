@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisis Pengelolaan Limbah B3</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        header {
+            background-color: #DFC57B;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font: Georgia;
+            font-size: 1.8rem;
+        }
+
+        header p {
+            margin: 5px 0 0;
+            font-size: 1rem;
+        }
+
+        main {
+            padding: 20px;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border: 2px solid #4CAF50;
+            border-radius: 5px;
+            background-color: #ffffff;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        select:hover {
+            border-color: #45a049;
+        }
+
+        .dropdown {
+            margin-bottom: 20px;
+        }
+
+        .dropdown label {
+            font-weight: bold;
+            font-size: 1rem;
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        #map {
+            height: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+        }
+
+        #tempatPengelolaan {
+            margin-bottom: 20px;
+        }
+
+        #tempatPengelolaan ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #tempatPengelolaan li {
+            background: #f1f1f1;
+            margin: 5px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            background: #DFC57B;
+            color: white;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+    </style>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+    <header>
+        <h1>Pengelolaan Limbah B3 di Indonesia</h1>
+        <p>Pilih jenis limbah untuk melihat tempat pengelolaannya.</p>
+    </header>
+    
+    <main>
+        <div class="dropdown">
+            <label for="limbah">Pilih Jenis Limbah B3:</label>
+            <select id="limbah" name="limbah">
+                <option value="oil">Limbah Oli</option>
+                <option value="solvent">Limbah Solvent</option>
+                <option value="e-waste">Limbah Elektronik</option>
+                <option value="chemical">Limbah Kimia</option>
+            </select>
+        </div>
+        
+        <div id="tempatPengelolaan" class="tempat">
+            <h2>Tempat Pengelolaan:</h2>
+            <ul id="listTempat"></ul>
+        </div>
+
+        <div id="map" style="height: 400px; width: 100%;"></div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2024 Analisis Pengelolaan Limbah B3</p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    
+    <script>
+        const tempatData = {
+            "oil": [
+                { name: "Jakarta: PT XYZ - Pengelolaan Limbah Oli", lat: -6.2088, lng: 106.8456 },
+                { name: "Surabaya: PT ABC - Oli Bekas Pengolahan", lat: -7.2504, lng: 112.7688 },
+                { name: "Bandung: PT DEF - Penyaringan Limbah Oli", lat: -6.9175, lng: 107.6191 }
+            ],
+            "solvent": [
+                { name: "Medan: PT MNO - Pengolahan Limbah Solvent", lat: 3.5952, lng: 98.6722 },
+                { name: "Yogyakarta: PT PQR - Daur Ulang Solvent", lat: -7.7956, lng: 110.3695 },
+                { name: "Semarang: PT STU - Pengelolaan Limbah Solvent", lat: -6.9660, lng: 110.4193 }
+            ],
+            "e-waste": [
+                { name: "Bali: PT EFG - Daur Ulang Limbah Elektronik", lat: -8.4095, lng: 115.1889 },
+                { name: "Jakarta: PT HIJ - Pengelolaan E-Waste", lat: -6.2088, lng: 106.8456 },
+                { name: "Makassar: PT KLM - Daur Ulang Barang Elektronik", lat: -5.1477, lng: 119.4328 }
+            ],
+            "chemical": [
+                { name: "Surabaya: PT NOP - Limbah Kimia Berbahaya", lat: -7.2504, lng: 112.7688 },
+                { name: "Bandung: PT QRS - Pengelolaan Limbah Kimia", lat: -6.9175, lng: 107.6191 },
+                { name: "Solo: PT TUV - Penyimpanan Limbah Kimia", lat: -7.5665, lng: 110.8273 }
+            ]
+        };
+
+        let map = L.map('map').setView([0, 0], 5);
+        let markers = []; 
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        function updateMap(limbah) {
+            markers.forEach(marker => {
+                map.removeLayer(marker);
+            });
+            markers = [];
+
+            const tempat = tempatData[limbah] || [];
+            
+            const listTempat = document.getElementById('listTempat');
+            listTempat.innerHTML = '';
+            tempat.forEach(tempat => {
+                const li = document.createElement("li");
+                li.textContent = tempat.name;
+                listTempat.appendChild(li);
+
+                const marker = L.marker([tempat.lat, tempat.lng]).addTo(map);
+                marker.bindPopup(tempat.name);
+                markers.push(marker);
+            });
+        }
+
+        document.getElementById("limbah").addEventListener("change", function() {
+            const selectedLimbah = this.value;
+            updateMap(selectedLimbah);
+        });
+
+        updateMap('oil');
+    </script>
+</body>
+</html>

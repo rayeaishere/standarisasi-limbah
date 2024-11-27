@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisa Limbah</title>
+    <link rel="stylesheet" href="styles2.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">Analisa Limbah</div>
+        <div class="dropdown">
+            <label for="limbah">Pilih Limbah: </label>
+            <select id="limbah" onchange="analyzeLimbah()">
+                <option value="">--Pilih Limbah--</option>
+                <option value="oli">Oli Bekas</option>
+                <option value="plastik">Plastik</option>
+                <option value="medis">Limbah Medis</option>
+                <option value="organik">Sampah Organik</option>
+            </select>
+        </div>
+        <div class="result">
+            <img id="limbahImage" alt="Ilustrasi Limbah" style="display: none;">
+            <div id="kategori"></div>
+            <div id="jenis"></div>
+            <div id="pengelolaan"></div>
+        </div>
+    </div>
+    <script src="script2.js"></script>
+</body>
+</html>
